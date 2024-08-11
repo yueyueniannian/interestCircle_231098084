@@ -1,0 +1,104 @@
+<!-- post.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>帖子详情</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #fde2e2;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        #postContent, #comments {
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        #commentForm {
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #007BFF;
+            color: white;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+<h1 id="postTitle"></h1>
+<div id="postContent"></div>
+<form id="commentForm">
+    <textarea name="content" placeholder="发表评论"></textarea>
+    <button type="submit">提交评论</button>
+</form>
+<div id="comments"></div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const postTitle = decodeURIComponent(window.location.pathname.split('/').pop());
+        fetch(`/api/post/${encodeURIComponent(postTitle)}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('postTitle').innerText = data.title;
+                document.getElementById('postContent').innerHTML = `<p>${data.content}</p>`;
+                const commentsDiv = document.getElementById('comments');
+                data.comments.forEach(comment => {
+                    const commentBlock = document.createElement('div');
+                    commentBlock.innerHTML = `<p>${comment.content}</p>`;
+                    commentsDiv.appendChild(commentBlock);
+                });
+            });
+
+        const commentForm = document.getElementById('commentForm');
+        if (commentForm) {
+            commentForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const postTitle = decodeURIComponent(window.location.pathname.split('/').pop());
+                const content = commentForm.content.value;
+
+                fetch('/api/comment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ postTitle, content })
+                })
+                    .then(response => response.text())
+                    .then(data => {
+                        if (data === '评论成功') {
+                            window.location.reload();
+                        } else {
+                            alert(data);
+                        }
+                    });
+            });
+        }
+    });
+</script>
+</body>
+</html>
+
